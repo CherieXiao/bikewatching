@@ -24,16 +24,16 @@ map.on('load', async () => {
     map.addSource('boston_route', {
         type: 'geojson',
         data: 'https://bostonopendata-boston.opendata.arcgis.com/datasets/boston::existing-bike-network-2022.geojson'
-      });
-      
+    });
+
     map.addLayer({
         id: 'boston-bike-lanes',
         type: 'line',
         source: 'boston_route',
         paint: {
-        'line-color': '#32D400',  // A bright green using hex code
-        'line-width': 5,          // Thicker lines
-        'line-opacity': 0.6       // Slightly less transparent
+            'line-color': '#32D400',
+            'line-width': 5,
+            'line-opacity': 0.6
         }
     });
 
@@ -41,15 +41,15 @@ map.on('load', async () => {
         type: 'geojson',
         data: 'https://raw.githubusercontent.com/cambridgegis/cambridgegis_data/main/Recreation/Bike_Facilities/RECREATION_BikeFacilities.geojson'
     });
-      
+
     map.addLayer({
         id: 'cambridge-bike-lanes',
         type: 'line',
         source: 'cambridge_route',
         paint: {
-        'line-color': '#FC8EAC',
-        'line-width': 5,          // Thicker lines
-        'line-opacity': 0.6       // Slightly less transparent
+            'line-color': '#FC8EAC',
+            'line-width': 5,
+            'line-opacity': 0.6
         }
     });
 
@@ -65,24 +65,6 @@ map.on('load', async () => {
     let stations = jsonData.data.stations;
     console.log('Stations Array:', stations);
 
-    svg.selectAll('circle')
-        .data(stations)
-        .join('circle')
-        .attr('r', 5)
-        .attr('fill', 'steelblue')
-        .attr('stroke', 'white')
-        .attr('stroke-width', 1)
-        .attr('opacity', 0.8);
-
-    // Update positions initially
-    updatePositions();
-
-    // Add event listeners
-    map.on('move', updatePositions);
-    map.on('zoom', updatePositions);
-    map.on('resize', updatePositions);
-    map.on('moveend', updatePositions);
-
     let trips;
     try {
         const csvurl = 'https://dsc106.com/labs/lab07/data/bluebikes-traffic-2024-03.csv';
@@ -95,27 +77,49 @@ map.on('load', async () => {
     const departures = d3.rollup(
         trips,
         (v) => v.length,
-        (d) => d.start_station_id,
-      );
+        (d) => d.start_station_id
+    );
+
     const arrivals = d3.rollup(
         trips,
         (v) => v.length,
-        (d) => d.start_station_id,
+        (d) => d.end_station_id
     );
+
     stations = stations.map((station) => {
-        let id = station.short_name;
+        const id = station.short_name;
         station.arrivals = arrivals.get(id) ?? 0;
         station.departures = departures.get(id) ?? 0;
-        station.totalTraffic = station.arrivals + station.departures; 
+        station.totalTraffic = station.arrivals + station.departures;
         return station;
-      });
-      console.log('Stations with Traffic Data:', stations);
+    });
+
+    console.log('Stations with Traffic Data:', stations);
+
+    const radiusScale = d3
+        .scaleSqrt()
+        .domain([0, d3.max(stations, (d) => d.totalTraffic)])
+        .range([0, 25]);
+
+    const circles = svg.selectAll('circle')
+        .data(stations)
+        .join('circle')
+        .attr('r', (d) => radiusScale(d.totalTraffic)) // Use radiusScale for sizing
+        .attr('fill', 'steelblue')
+        .attr('stroke', 'white')
+        .attr('stroke-width', 1)
+        .attr('opacity', 0.8);
+
+    function updatePositions() {
+        circles
+            .attr('cx', (d) => getCoords(d).cx)
+            .attr('cy', (d) => getCoords(d).cy);
+    }
+
+    updatePositions();
+
+    map.on('move', updatePositions);
+    map.on('zoom', updatePositions);
+    map.on('resize', updatePositions);
+    map.on('moveend', updatePositions);
 });
-
-
-
-function updatePositions() {
-    svg.selectAll('circle')
-        .attr('cx', d => getCoords(d).cx)
-        .attr('cy', d => getCoords(d).cy);
-}
