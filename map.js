@@ -60,7 +60,6 @@ map.on('load', async () => {
         console.log('Loaded JSON Data:', jsonData);
     } catch (error) {
         console.error('Error loading JSON:', error);
-        return; // Exit if data fails to load
     }
 
     let stations = jsonData.data.stations;
@@ -83,6 +82,15 @@ map.on('load', async () => {
     map.on('zoom', updatePositions);
     map.on('resize', updatePositions);
     map.on('moveend', updatePositions);
+
+    let trips;
+    try {
+        const csvurl = 'https://dsc106.com/labs/lab07/data/bluebikes-trips.csv';
+        trips = await d3.csv(csvurl);
+        console.log('Loaded Traffic Data:', trips);
+    } catch (error) {
+        console.error('Error loading traffic data:', error);
+    }
 });
 
 function updatePositions() {
