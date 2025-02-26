@@ -42,3 +42,20 @@ svg circle {
   stroke-width: 1;
   pointer-events: auto;
 }
+
+label {
+  gap: 1em;
+  display: flex;
+  margin-left: auto;
+  align-items: flex-start;
+}
+
+time, em {
+  display: block;
+  margin-top: 0.5em;
+}
+
+em {
+  color: #666;
+  font-style: italic;
+}
