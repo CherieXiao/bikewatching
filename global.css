@@ -43,14 +43,6 @@ svg circle {
   pointer-events: auto;
 }
 
-label {
-  gap: 1em;
-  display: flex;
-  margin-left: auto;
-  align-items: center;
-  margin-bottom: 1em;
-}
-
 time, em {
   display: inline-block;
   margin-top: 0;
@@ -60,4 +52,16 @@ em {
   color: #666;
   font-style: italic;
   margin-left: 0.5em;
+}
+
+label {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto 1em;
+}
+
+#time-slider {
+  width: 600px;
+  min-width: unset;
+  flex-grow: 0;          /* Prevent expanding */
 }
