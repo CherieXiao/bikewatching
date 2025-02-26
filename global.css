@@ -47,15 +47,17 @@ label {
   gap: 1em;
   display: flex;
   margin-left: auto;
-  align-items: flex-start;
+  align-items: center;
+  margin-bottom: 1em;
 }
 
 time, em {
-  display: block;
-  margin-top: 0.5em;
+  display: inline-block;
+  margin-top: 0;
 }
 
 em {
   color: #666;
   font-style: italic;
+  margin-left: 0.5em;
 }
