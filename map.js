@@ -15,6 +15,7 @@ const map = new mapboxgl.Map({
 const svg = d3.select('#map').select('svg');
 let departuresByMinute = Array.from({ length: 1440 }, () => []);
 let arrivalsByMinute = Array.from({ length: 1440 }, () => []);
+const stationFlow = d3.scaleQuantize().domain([0, 1]).range([0, 0.5, 1]);
 
 // Helper functions
 function getCoords(station) {
@@ -116,7 +117,6 @@ map.on('load', async () => {
                 trip.started_at = new Date(trip.started_at);
                 trip.ended_at = new Date(trip.ended_at);
                 
-                // Add to minute buckets
                 const startMin = minutesSinceMidnight(trip.started_at);
                 const endMin = minutesSinceMidnight(trip.ended_at);
                 departuresByMinute[startMin].push(trip);
@@ -126,20 +126,20 @@ map.on('load', async () => {
             }
         );
 
-        // Initial processing with all trips
+        // Initial processing
         stations = computeStationTraffic(stations);
         let radiusScale = d3.scaleSqrt()
             .domain([0, d3.max(stations, (d) => d.totalTraffic)])
             .range([0, 25]);
 
-        // Create initial circles
+        // Create circles
         const circles = svg
             .selectAll('circle')
             .data(stations, (d) => d.short_name)
             .enter()
             .append('circle')
             .attr('r', (d) => radiusScale(d.totalTraffic))
-            .attr('fill', 'steelblue')
+            .style('--departure-ratio', d => stationFlow(d.departures / d.totalTraffic))
             .attr('stroke', 'white')
             .attr('stroke-width', 1)
             .attr('opacity', 0.8)
@@ -154,7 +154,8 @@ map.on('load', async () => {
             svg.selectAll('circle')
                 .data(filteredStations, (d) => d.short_name)
                 .join('circle')
-                .attr('r', (d) => radiusScale(d.totalTraffic));
+                .attr('r', (d) => radiusScale(d.totalTraffic))
+                .style('--departure-ratio', d => stationFlow(d.departures / d.totalTraffic));
         }
 
         function updateTimeDisplay() {
@@ -171,14 +172,14 @@ map.on('load', async () => {
             updateScatterPlot(timeFilter);
         }
 
-        timeSlider.addEventListener('input', updateTimeDisplay);
-        updateTimeDisplay();
-
         function updatePositions() {
             svg.selectAll('circle')
                 .attr('cx', (d) => getCoords(d).cx)
                 .attr('cy', (d) => getCoords(d).cy);
         }
+
+        timeSlider.addEventListener('input', updateTimeDisplay);
+        updateTimeDisplay();
 
         map.on('move', updatePositions);
         map.on('zoom', updatePositions);
